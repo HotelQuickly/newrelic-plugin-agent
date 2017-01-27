@@ -10,6 +10,7 @@ available = {
     'elasticsearch':
         'newrelic_plugin_agent.plugins.elasticsearch.ElasticSearch',
     'haproxy': 'newrelic_plugin_agent.plugins.haproxy.HAProxy',
+    'kubernetes': 'newrelic_plugin_agent.plugins.kubernetes.Kubernetes',
     'memcached': 'newrelic_plugin_agent.plugins.memcached.Memcached',
     'mongodb': 'newrelic_plugin_agent.plugins.mongodb.MongoDB',
     'nginx': 'newrelic_plugin_agent.plugins.nginx.Nginx',

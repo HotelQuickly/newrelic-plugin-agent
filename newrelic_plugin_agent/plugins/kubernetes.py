@@ -1,0 +1,102 @@
+"""
+Kubernetes
+
+"""
+import logging
+import pykube
+import os
+import math
+
+from newrelic_plugin_agent.plugins import base
+
+LOGGER = logging.getLogger(__name__)
+
+
+class Kubernetes(base.Plugin):
+
+    GUID = 'com.hotelquickly.newrelic_kubernetes_agent'
+
+    def __init__(self, config, poll_interval, last_interval_values=None):
+        super(Kubernetes, self).__init__(config, poll_interval, last_interval_values)
+
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = config["google_application_credentials"]
+        self._kube_config_file = config["kube_config"]
+        self._api = pykube.HTTPClient(pykube.KubeConfig.from_file(self._kube_config_file))
+
+    def poll(self):
+        """Poll the Kubernetes server"""
+        LOGGER.info('Polling Kubernetes')
+
+        total_available_cpu_available_rounded = 0
+        nodes = self._get_nodes()
+        for node in nodes:
+            node_name = node["metadata"]["name"]
+            pods = self._get_non_terminated_pods(node_name)
+
+            cpu_req_sum = 0
+            for pod in pods:
+                container = pod["spec"]["containers"][0]
+                if "resources" in container and len(container["resources"]) > 0:
+                    cpu_req = container["resources"]["requests"]["cpu"]
+                    cpu_req = self._convert_resources_value_to_float(cpu_req)
+                    print(pod["metadata"]["name"], cpu_req)
+                    cpu_req_sum += cpu_req
+
+            cpu_req_sum_rounded = int(math.floor(cpu_req_sum))
+            print('cpu_req_sum', cpu_req_sum, cpu_req_sum_rounded)
+
+            allocatable_cpu = int(node["status"]["allocatable"]["cpu"])
+            allocatable_cpu_rounded = allocatable_cpu - 1
+
+            self.add_gauge_value("Resources/CPU/Requests/Usage/Raw/%s" % node_name, "Core",
+                                 cpu_req_sum)
+            self.add_gauge_value("Resources/CPU/Requests/Usage/Rounded/%s" % node_name, "Core",
+                                 cpu_req_sum_rounded)
+
+            self.add_gauge_value("Resources/CPU/Requests/Available/Raw/%s" % node_name, "Core",
+                                 allocatable_cpu_rounded - cpu_req_sum)
+            self.add_gauge_value("Resources/CPU/Requests/Available/Rounded/%s" % node_name, "Core",
+                                 allocatable_cpu_rounded - cpu_req_sum_rounded)
+
+            self.add_gauge_value("Resources/CPU/Capacity/Raw/%s" % node_name, "Core",
+                                 allocatable_cpu)
+            self.add_gauge_value("Resources/CPU/Capacity/Rounded/%s" % node_name, "Core",
+                                 allocatable_cpu_rounded)
+
+            total_available_cpu_available_rounded += allocatable_cpu_rounded - cpu_req_sum_rounded
+
+        self.add_gauge_value("Summary/Resources/CPU/Requests/Available/Rounded", "Core",
+                             total_available_cpu_available_rounded)
+
+        self.finish()
+
+    def _get_nodes_default_pool(self):
+        return self._get_nodes({"cloud.google.com/gke-nodepool": "default-pool"})
+
+    def _get_nodes(self, selector=None):
+        nodes = pykube.Node.objects(self._api).filter(selector=selector)
+        return nodes.response["items"]
+
+    def _get_non_terminated_pods(self, node_name):
+        running_pods = pykube.Pod.objects(self._api).filter(
+            namespace=pykube.all,
+            field_selector={
+                "spec.nodeName": node_name,
+                "status.phase": "Running",
+            })
+        pending_pods = pykube.Pod.objects(self._api).filter(
+            namespace=pykube.all,
+            field_selector={
+                "spec.nodeName": node_name,
+                "status.phase": "Pending",
+            })
+
+        return running_pods.response["items"] + pending_pods.response["items"]
+
+    @staticmethod
+    def _convert_resources_value_to_float(value):
+        if value.endswith("m", 0):
+            value = float(value.rstrip("m")) / 1000
+        else:
+            value = float(value)
+        return value
