@@ -41,7 +41,7 @@ class Kubernetes(base.Plugin):
                     cpu_req = self._convert_resources_value_to_float(cpu_req)
                     cpu_req_sum += cpu_req
 
-            cpu_req_sum_rounded = int(math.floor(cpu_req_sum))
+            cpu_req_sum_rounded = int(math.ceil(cpu_req_sum))
 
             allocatable_cpu = int(node["status"]["allocatable"]["cpu"])
             allocatable_cpu_rounded = allocatable_cpu - 1
