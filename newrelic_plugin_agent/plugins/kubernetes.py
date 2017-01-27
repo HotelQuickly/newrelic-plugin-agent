@@ -39,11 +39,9 @@ class Kubernetes(base.Plugin):
                 if "resources" in container and len(container["resources"]) > 0:
                     cpu_req = container["resources"]["requests"]["cpu"]
                     cpu_req = self._convert_resources_value_to_float(cpu_req)
-                    print(pod["metadata"]["name"], cpu_req)
                     cpu_req_sum += cpu_req
 
             cpu_req_sum_rounded = int(math.floor(cpu_req_sum))
-            print('cpu_req_sum', cpu_req_sum, cpu_req_sum_rounded)
 
             allocatable_cpu = int(node["status"]["allocatable"]["cpu"])
             allocatable_cpu_rounded = allocatable_cpu - 1
