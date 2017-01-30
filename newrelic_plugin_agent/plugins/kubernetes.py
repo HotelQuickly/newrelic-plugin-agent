@@ -13,7 +13,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Kubernetes(base.Plugin):
-
     GUID = 'com.hotelquickly.newrelic_kubernetes_agent'
 
     def __init__(self, config, poll_interval, last_interval_values=None):
@@ -27,6 +26,13 @@ class Kubernetes(base.Plugin):
         """Poll the Kubernetes server"""
         LOGGER.info('Polling Kubernetes')
 
+        try:
+            self.run()
+            self.finish()
+        except Exception as e:
+            LOGGER.exception(e)
+
+    def run(self):
         total_available_cpu_available_rounded = 0
         nodes = self._get_nodes()
         for node in nodes:
@@ -62,11 +68,8 @@ class Kubernetes(base.Plugin):
                                  allocatable_cpu_rounded)
 
             total_available_cpu_available_rounded += allocatable_cpu_rounded - cpu_req_sum_rounded
-
         self.add_gauge_value("Summary/Resources/CPU/Requests/Available/Rounded", "Core",
                              total_available_cpu_available_rounded)
-
-        self.finish()
 
     def _get_nodes_default_pool(self):
         return self._get_nodes({"cloud.google.com/gke-nodepool": "default-pool"})
