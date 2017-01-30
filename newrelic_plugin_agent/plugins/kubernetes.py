@@ -31,6 +31,8 @@ class Kubernetes(base.Plugin):
             self.finish()
         except Exception as e:
             LOGGER.exception(e)
+            self.derive_values = dict()
+            self.gauge_values = dict()
 
     def run(self):
         total_available_cpu_available_rounded = 0
