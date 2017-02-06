@@ -25,7 +25,7 @@ if sys.version_info < (2, 7, 0):
     install_requires.append('importlib')
 
 setup(name='newrelic_plugin_agent',
-      version='1.4.3',
+      version='1.4.4',
       description='Python based agent for collecting metrics for NewRelic',
       url='https://github.com/MeetMe/newrelic-plugin-agent',
       packages=['newrelic_plugin_agent', 'newrelic_plugin_agent.plugins'],

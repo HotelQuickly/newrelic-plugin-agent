@@ -82,15 +82,15 @@ class Kubernetes(base.Plugin):
         hpa = self._get_hpa(app_name)
         status = hpa[0]["status"]
 
-        self.add_gauge_value("App/%s/HPA/CurrentCPUUtilizationPercentage" % app_name,
+        self.add_gauge_value("App/%s/HPA/CPU/CurrentPercentage" % app_name,
                              "Percent",
                              status["currentCPUUtilizationPercentage"])
 
-        self.add_gauge_value("App/%s/HPA/CurrentReplicas" % app_name,
+        self.add_gauge_value("App/%s/HPA/Replica/Current" % app_name,
                              "Pod",
                              status["currentReplicas"])
 
-        self.add_gauge_value("App/%s/HPA/DesiredReplicas" % app_name,
+        self.add_gauge_value("App/%s/HPA/Replica/Desired" % app_name,
                              "Pod",
                              status["desiredReplicas"])
 
