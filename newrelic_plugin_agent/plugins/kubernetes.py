@@ -36,12 +36,14 @@ class Kubernetes(base.Plugin):
 
     def run(self):
         self._run_core_report()
-        self._run_app_report("inv-system-live-1")
-        self._run_app_report("hotel-system-live")
-        self._run_app_report("msi-affiliate-live")
-        self._run_app_report("msi-hc-live")
-        self._run_app_report("msi-trivago-live")
-        self._run_app_report("msi-tripadvisor-live")
+        try:
+            self._run_app_report("inv-system-live-1")
+            self._run_app_report("msi-affiliate-live")
+            self._run_app_report("msi-hc-live")
+            self._run_app_report("msi-trivago-live")
+            self._run_app_report("msi-tripadvisor-live")
+        except Exception as e:
+            LOGGER.exception(e)
 
     def _run_core_report(self):
         total_available_cpu_available_rounded = 0
@@ -106,8 +108,8 @@ class Kubernetes(base.Plugin):
         return nodes.response["items"]
 
     def _get_hpa(self, namespace=None):
-        invsys = pykube.HorizontalPodAutoscaler.objects(self._api).filter(namespace=namespace)
-        return invsys.response["items"]
+        hpa = pykube.HorizontalPodAutoscaler.objects(self._api).filter(namespace=namespace)
+        return hpa.response["items"]
 
     def _get_non_terminated_pods(self, node_name):
         running_pods = pykube.Pod.objects(self._api).filter(
