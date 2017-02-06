@@ -35,6 +35,10 @@ class Kubernetes(base.Plugin):
             self.gauge_values = dict()
 
     def run(self):
+        self._run_core_report()
+        self._run_invsys_report()
+
+    def _run_core_report(self):
         total_available_cpu_available_rounded = 0
         nodes = self._get_nodes()
         for node in nodes:
@@ -73,12 +77,33 @@ class Kubernetes(base.Plugin):
         self.add_gauge_value("Summary/Resources/CPU/Requests/Available/Rounded", "Core",
                              total_available_cpu_available_rounded)
 
+    def _run_invsys_report(self):
+        app_name = "inv-system-live-1"
+        hpa = self._get_hpa(app_name)
+        status = hpa[0]["status"]
+
+        self.add_gauge_value("App/%s/HPA/CurrentCPUUtilizationPercentage" % app_name,
+                             "Percent",
+                             status["currentCPUUtilizationPercentage"])
+
+        self.add_gauge_value("App/%s/HPA/CurrentReplicas" % app_name,
+                             "Pod",
+                             status["currentReplicas"])
+
+        self.add_gauge_value("App/%s/HPA/DesiredReplicas" % app_name,
+                             "Pod",
+                             status["desiredReplicas"])
+
     def _get_nodes_default_pool(self):
         return self._get_nodes({"cloud.google.com/gke-nodepool": "default-pool"})
 
     def _get_nodes(self, selector=None):
         nodes = pykube.Node.objects(self._api).filter(selector=selector)
         return nodes.response["items"]
+
+    def _get_hpa(self, namespace=None):
+        invsys = pykube.HorizontalPodAutoscaler.objects(self._api).filter(namespace=namespace)
+        return invsys.response["items"]
 
     def _get_non_terminated_pods(self, node_name):
         running_pods = pykube.Pod.objects(self._api).filter(
