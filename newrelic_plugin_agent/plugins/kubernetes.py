@@ -36,7 +36,12 @@ class Kubernetes(base.Plugin):
 
     def run(self):
         self._run_core_report()
-        self._run_invsys_report()
+        self._run_app_report("inv-system-live-1")
+        self._run_app_report("hotel-system-live")
+        self._run_app_report("msi-affiliate-live")
+        self._run_app_report("msi-hc-live")
+        self._run_app_report("msi-trivago-live")
+        self._run_app_report("msi-tripadvisor-live")
 
     def _run_core_report(self):
         total_available_cpu_available_rounded = 0
@@ -77,8 +82,7 @@ class Kubernetes(base.Plugin):
         self.add_gauge_value("Summary/Resources/CPU/Requests/Available/Rounded", "Core",
                              total_available_cpu_available_rounded)
 
-    def _run_invsys_report(self):
-        app_name = "inv-system-live-1"
+    def _run_app_report(self, app_name):
         hpa = self._get_hpa(app_name)
         status = hpa[0]["status"]
 
