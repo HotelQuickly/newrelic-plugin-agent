@@ -125,7 +125,9 @@ class Kubernetes(base.Plugin):
                 "status.phase": "Pending",
             })
 
-        return running_pods.response["items"] + pending_pods.response["items"]
+        return [] + \
+            (running_pods.response["items"] if running_pods.response["items"] else []) + \
+            (pending_pods.response["items"] if pending_pods.response["items"] else [])
 
     @staticmethod
     def _convert_resources_value_to_float(value):
