@@ -26,16 +26,16 @@ class Kubernetes(base.Plugin):
         """Poll the Kubernetes server"""
         LOGGER.info('Polling Kubernetes')
 
+        self.run()
+        self.finish()
+
+    def run(self):
         try:
-            self.run()
-            self.finish()
+            self._run_core_report()
         except Exception as e:
             LOGGER.exception(e)
             self.derive_values = dict()
             self.gauge_values = dict()
-
-    def run(self):
-        self._run_core_report()
         try:
             self._run_app_report("inv-system-live-1")
             self._run_app_report("msi-affiliate-live")
