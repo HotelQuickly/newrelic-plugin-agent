@@ -55,7 +55,9 @@ class Kubernetes(base.Plugin):
             cpu_req_sum = 0
             for pod in pods:
                 container = pod["spec"]["containers"][0]
-                if "resources" in container and "cpu" in container["resources"]:
+                if "resources" in container and \
+                    "requests" in container["resources"] and \
+                    "cpu" in container["resources"]["requests"]:
                     cpu_req = container["resources"]["requests"]["cpu"]
                     cpu_req = self._convert_resources_value_to_float(cpu_req)
                     cpu_req_sum += cpu_req
